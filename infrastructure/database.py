@@ -29,7 +29,6 @@ def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
     try: 
         yield db
-        db.commit()
     except SQLAlchemyError:
         db.rollback()
         raise

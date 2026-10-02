@@ -1,6 +1,6 @@
 import uuid
-
-from sqlalchemy import ForeignKey, Index, func, Uuid, PrimaryKeyConstraint, CheckConstraint, DateTime, BIGINT, CHAR, text
+from uuid_utils import uuid7
+from sqlalchemy import ForeignKey, Index, func, Uuid, PrimaryKeyConstraint, CheckConstraint, ForeignKeyConstraint, DateTime, BIGINT, CHAR, text
 from sqlalchemy.orm import Mapped, mapped_column 
 from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime
@@ -10,7 +10,7 @@ from infrastructure.database import Base
 class MERCHANTS(Base):
     __tablename__ = "merchants"
 
-    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, server_default=func.gen_random_uuid())
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid7)
     name: Mapped[str] = mapped_column(nullable=False)
     api_key_hash: Mapped[str] = mapped_column(unique=True, nullable=False)
     created_at : Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
@@ -18,7 +18,7 @@ class MERCHANTS(Base):
 class IDEMPOTENCY_KEYS(Base):
     __tablename__ = "idempotency_keys"
 
-    merchant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("merchants.id", ondelete="CASCADE"))
+    merchant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("merchants.id", ondelete="CASCADE"))
     key: Mapped[str] = mapped_column()
     request_hash: Mapped[str] = mapped_column(nullable=False)
     response_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
@@ -29,14 +29,14 @@ class IDEMPOTENCY_KEYS(Base):
     __table_args__ = (
         PrimaryKeyConstraint("merchant_id", "key", 
             name="pk_idempotency_merchant_key"),
-        CheckConstraint("status IN ('processing', 'completed')", name="ck_idem_status")
+        CheckConstraint("status IN ('processing', 'completed')", name="ck_idem_status"),
         )
 
 class PAYMENTS(Base):
     __tablename__ = "payments"
 
-    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, server_default=func.gen_random_uuid())
-    merchant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("merchants.id", ondelete="CASCADE"), nullable=False)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid7)
+    merchant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("merchants.id", ondelete="CASCADE"), nullable=False)
     amount_minor: Mapped[int] = mapped_column(BIGINT, nullable=False)
     currency: Mapped[str] = mapped_column(CHAR(3), nullable=False)
     status: Mapped[str] = mapped_column(nullable=False)
@@ -46,14 +46,20 @@ class PAYMENTS(Base):
 
     __table_args__ = (
         CheckConstraint("amount_minor > 0 AND currency = upper(currency) AND status IN ('pending', 'settled', 'failed', 'refunded')", name="ck_payments_status"),
-        Index("ix_payment_merchant_created_at", merchant_id, created_at.desc())
+        CheckConstraint("amount_minor <> 0", name="ck_entries_nonzero"),
+        Index("ix_payment_merchant_created_at", merchant_id, created_at.desc()),
+        ForeignKeyConstraint(
+            ["merchant_id", "idempotency_key"], 
+            ["idempotency_keys.merchant_id", "idempotency_keys.key"],
+            name="fk_payment_idempotency", ondelete="RESTRICT",
+        )
     )
 
 class OUTBOX(Base):
     __tablename__ = "outbox"
 
     id: Mapped[int] = mapped_column(BIGINT, primary_key=True)
-    event_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    event_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False, default=uuid7)
     aggregate_type: Mapped[str] = mapped_column(nullable=False)
     aggregate_id: Mapped[str] = mapped_column(nullable=False)
     event_type: Mapped[str] = mapped_column(nullable=False)
@@ -66,5 +72,6 @@ class OUTBOX(Base):
 
     __table_args__ = (
         Index("ix_outbox_pending", next_attempt_at,
-      postgresql_where=(published_at.is_(None)))
+      postgresql_where=(published_at.is_(None))),
     )
+
