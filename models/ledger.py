@@ -25,11 +25,12 @@ class TRANSACTIONS(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid7)
     type: Mapped[str] = mapped_column(nullable=False)
-    source_event_id: Mapped[uuid.UUID] = mapped_column(nullable=False, unique=True)
+    source_event_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
     __table_args__ = (
         CheckConstraint("type IN ('charge', 'refund', 'payout', 'fee')", name="ck_txn_type"),
+        UniqueConstraint("source_event_id", name="uq_transactions_source_event_id"),
     )
 
 class ENTRIES(Base): 
@@ -49,5 +50,5 @@ class ENTRIES(Base):
 class PROCESSED_EVENTS(Base):
     __tablename__ = "processed_events"
 
-    event_id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid7)
+    event_id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True)
     processed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
