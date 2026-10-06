@@ -25,11 +25,10 @@ def get_engine():
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
-    bind=get_engine()
 )
 
 def get_db() -> Generator[Session, None, None]:
-    db = SessionLocal()
+    db = SessionLocal(bind=get_engine())
     try: 
         yield db
     except SQLAlchemyError:
