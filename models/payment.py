@@ -1,6 +1,6 @@
 import uuid
 from uuid_utils import uuid7
-from sqlalchemy import ForeignKey, Index, func, Uuid, PrimaryKeyConstraint, CheckConstraint, ForeignKeyConstraint, DateTime, BIGINT, CHAR, text
+from sqlalchemy import ForeignKey, Index, func, Uuid, PrimaryKeyConstraint, UniqueConstraint, CheckConstraint, ForeignKeyConstraint, DateTime, BIGINT, CHAR, text
 from sqlalchemy.orm import Mapped, mapped_column 
 from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime
@@ -12,9 +12,12 @@ class MERCHANTS(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid7)
     name: Mapped[str] = mapped_column(nullable=False)
-    api_key_hash: Mapped[str] = mapped_column(unique=True, nullable=False)
+    api_key_hash: Mapped[str] = mapped_column(nullable=False)
     created_at : Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
+    __table_args__ = (
+        UniqueConstraint("api_key_hash", name="uq_merchants_api_key_hash"),
+    )
 class IDEMPOTENCY_KEYS(Base):
     __tablename__ = "idempotency_keys"
 
@@ -46,7 +49,6 @@ class PAYMENTS(Base):
 
     __table_args__ = (
         CheckConstraint("amount_minor > 0 AND currency = upper(currency) AND status IN ('pending', 'settled', 'failed', 'refunded')", name="ck_payments_status"),
-        CheckConstraint("amount_minor <> 0", name="ck_entries_nonzero"),
         Index("ix_payment_merchant_created_at", merchant_id, created_at.desc()),
         ForeignKeyConstraint(
             ["merchant_id", "idempotency_key"], 
@@ -58,7 +60,7 @@ class PAYMENTS(Base):
 class OUTBOX(Base):
     __tablename__ = "outbox"
 
-    id: Mapped[int] = mapped_column(BIGINT, primary_key=True)
+    id: Mapped[int] = mapped_column(BIGINT, primary_key=True, autoincrement=True)
     event_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False, default=uuid7)
     aggregate_type: Mapped[str] = mapped_column(nullable=False)
     aggregate_id: Mapped[str] = mapped_column(nullable=False)

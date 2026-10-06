@@ -4,7 +4,12 @@ from sqlalchemy.exc import SQLAlchemyError
 from typing import Generator
 from config import Config
 
-engine = create_engine(
+from functools import lru_cache
+Base = declarative_base()
+
+@lru_cache
+def get_engine():
+    return create_engine(
     Config.DATABASE_URL,
     pool_pre_ping=True,
     pool_size=Config.DB_POOL_SIZE,
@@ -20,10 +25,8 @@ engine = create_engine(
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
-    bind=engine
+    bind=get_engine()
 )
-
-Base = declarative_base()
 
 def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()

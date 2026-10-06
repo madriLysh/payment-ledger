@@ -25,7 +25,7 @@ class TRANSACTIONS(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid7)
     type: Mapped[str] = mapped_column(nullable=False)
-    source_event_id: Mapped[uuid.UUID] = mapped_column(nullable=False, unique=True, default=uuid7)
+    source_event_id: Mapped[uuid.UUID] = mapped_column(nullable=False, unique=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
     __table_args__ = (
@@ -43,6 +43,7 @@ class ENTRIES(Base):
 
     __table_args__ = (
         Index("ix_entries_account", account_id, created_at),
+        CheckConstraint("amount_minor <> 0", name="ck_entries_nonzero"),
     )
 
 class PROCESSED_EVENTS(Base):
