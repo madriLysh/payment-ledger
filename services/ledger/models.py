@@ -37,13 +37,14 @@ class ENTRIES(Base):
     __tablename__ = "entries"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    transaction_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("transactions.id"), nullable=False)
-    account_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("accounts.id"), nullable=False)
+    transaction_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("transactions.id", name="fk_entries_transaction"), nullable=False)
+    account_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("accounts.id", name="fk_entries_account"), nullable=False)
     amount_minor: Mapped[int] = mapped_column(BIGINT, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
     __table_args__ = (
         Index("ix_entries_account", account_id, created_at),
+        Index("ix_entries_transaction", transaction_id),
         CheckConstraint("amount_minor <> 0", name="ck_entries_nonzero"),
     )
 

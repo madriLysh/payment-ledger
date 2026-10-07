@@ -21,7 +21,7 @@ class MERCHANTS(Base):
 class IDEMPOTENCY_KEYS(Base):
     __tablename__ = "idempotency_keys"
 
-    merchant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("merchants.id", ondelete="CASCADE"))
+    merchant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("merchants.id", ondelete="CASCADE", name="fk_idem_merchant"))
     key: Mapped[str] = mapped_column()
     request_hash: Mapped[str] = mapped_column(nullable=False)
     response_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
@@ -39,7 +39,7 @@ class PAYMENTS(Base):
     __tablename__ = "payments"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid7)
-    merchant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("merchants.id", ondelete="CASCADE"), nullable=False)
+    merchant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("merchants.id", ondelete="CASCADE", name="fk_payments_merchant"), nullable=False)
     amount_minor: Mapped[int] = mapped_column(BIGINT, nullable=False)
     currency: Mapped[str] = mapped_column(CHAR(3), nullable=False)
     status: Mapped[str] = mapped_column(nullable=False)

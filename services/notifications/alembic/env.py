@@ -7,7 +7,6 @@ from alembic import context
 from config import Config
 from infrastructure.database import Base
 from services.notifications import models as notifications
-from services.payment import models as payment
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -49,6 +48,9 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        version_table="alembic_version_notifications",
+        include_schemas=True,
+        compare_type=True
     )
 
     with context.begin_transaction():
@@ -70,7 +72,9 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection, target_metadata=target_metadata,
+            version_table="alembic_version_notifications",
+            include_schemas=True, compare_type=True
         )
 
         with context.begin_transaction():

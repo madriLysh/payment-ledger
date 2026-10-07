@@ -11,7 +11,7 @@ class WEBHOOK_DELIVERIES(Base):
     __tablename__ = "webhook_deliveries"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid7)
-    payment_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("payments.id", ondelete="CASCADE"), nullable=False)
+    payment_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
     url: Mapped[str] = mapped_column(nullable=False)
     status: Mapped[str] = mapped_column(nullable=False, server_default="pending")
     attempts: Mapped[int] = mapped_column(nullable=False, server_default="0")
