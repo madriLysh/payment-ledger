@@ -11,7 +11,9 @@ dependencies = [
     "alembic>=1.20.0",
     "fastapi>=0.141.1",
     "psycopg[binary]>=3.3.6",
+    "pytest>=9.1.1",
     "sqlalchemy>=2.1.0",
+    "testcontainers>=4.15.0",
     "uuid-utils>=1.0.0",
     "uvicorn>=0.53.0",
 ]
@@ -22,3 +24,8 @@ payment-ledger = "payment_ledger:main"
 [build-system]
 requires = ["uv_build>=0.12.18,<0.13.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "testcontainers[postgres]>=4.15.0",
+]
