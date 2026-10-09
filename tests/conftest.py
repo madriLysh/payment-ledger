@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy import create_engine, NullPool, text
 from testcontainers.postgres import PostgresContainer
+from alembic import context
 from uuid import uuid4
 
 @pytest.fixture(scope="session")
@@ -33,4 +34,3 @@ def fresh_db(admin_engine):
         with admin_engine.connect() as conn:
             conn = conn.execution_options(isolation_level="AUTOCOMMIT")
             conn.execute(text(f'DROP DATABASE IF EXISTS "{db_name}"'))
-
