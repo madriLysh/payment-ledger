@@ -4,7 +4,7 @@ from testcontainers.postgres import PostgresContainer
 from uuid import uuid4
 
 @pytest.fixture(scope="session")
-def pf_container():
+def pg_container():
     with PostgresContainer("postgres:16") as postgres:
         yield postgres
 
@@ -25,11 +25,11 @@ def fresh_db(admin_engine):
         conn = conn.execution_options(isolation_level="AUTOCOMMIT")
         conn.execute(text(f'CREATE DATABASE "{db_name}"'))
 
-        url = str(admin_engine.url.set(database=db_name))
-        try:
-            yield url
-        finally:
-            with admin_engine.connect() as conn:
-                conn = conn.execution_options(isolation_level="AUTOCOMMIT")
-                conn.execute(text(f'DROP DATABASE IF EXISTS "{db_name}"'))
+    url = str(admin_engine.url.set(database=db_name))
+    try:
+        yield url
+    finally:
+        with admin_engine.connect() as conn:
+            conn = conn.execution_options(isolation_level="AUTOCOMMIT")
+            conn.execute(text(f'DROP DATABASE IF EXISTS "{db_name}"'))
 
