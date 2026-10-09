@@ -1,19 +1,11 @@
 import pytest
 
-from helper import run_alembic, make_engine
-from sqlalchemy import text
+from helper import run_alembic, list_tables
 
-def test_migration(fresh_db):
-    url= fresh_db
-    run_alembic("ledger", url, "head")
-    engine = make_engine(url)
-    
-    with engine.connect() as conn:
-        conn.execute(
-            text("INSERT INTO ACCOUNTS(owner_type, owner_id, currency) VALUES(:ot, :oi, :cur)"),{"ot": "merchant", "oi": "123", "cur": "USD"}
-        )
-        result = conn.execute(
-            text("SELECT * FROM ACCOUNTS")
-        )
+def test_ledger_migrations_create_schema(fresh_db):
+    run_alembic("ledger", fresh_db, "head")
 
-        assert result.scalar_one() == 1
+    tables = list_tables(fresh_db)
+
+    assert {"accounts", "transactions", "entries", "processed_events"} <= tables
+    assert "alembic_version_ledger" in tables

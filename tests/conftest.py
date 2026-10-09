@@ -27,7 +27,7 @@ def fresh_db(admin_engine):
         conn = conn.execution_options(isolation_level="AUTOCOMMIT")
         conn.execute(text(f'CREATE DATABASE "{db_name}"'))
 
-    url = str(admin_engine.url.set(database=db_name))
+    url = str(admin_engine.url.set(database=db_name).render_as_string(hide_password=False))
     try:
         yield url
     finally:
