@@ -10,7 +10,9 @@ def pg_container():
 
 @pytest.fixture(scope="session")
 def admin_engine(pg_container):
-    engine = create_engine(pg_container.get_connection_url(), poolclass=NullPool)
+    url = pg_container.get_connection_url().replace("postgresql://", "postgresql+psycopg://", 1)
+
+    engine = create_engine(url, poolclass=NullPool)
 
     try:
         yield engine
