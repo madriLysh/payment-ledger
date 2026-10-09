@@ -5,13 +5,12 @@ from uuid import uuid4
 
 @pytest.fixture(scope="session")
 def pg_container():
-    with PostgresContainer("postgres:16") as postgres:
+    with PostgresContainer("postgres:16", driver="psycopg") as postgres:
         yield postgres
 
 @pytest.fixture(scope="session")
 def admin_engine(pg_container):
     url = pg_container.get_connection_url().replace("postgresql://", "postgresql+psycopg://", 1)
-
     engine = create_engine(url, poolclass=NullPool)
 
     try:
